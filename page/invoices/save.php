@@ -36,23 +36,35 @@ try {
         $customerName = $customerCompany; // Use company name as name for manual
     }
 
-    // 2. Generate Invoice Number
-    $stmt = $db->query("CALL sp_generate_invoice_number()");
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    $invoiceNumber = $result['invoice_number'];
-    $stmt->closeCursor(); // Important for calling another stored procedure or query
+    // 2. Generate Invoice Number (PHP Version - No Stored Procedure)
+    // Get settings first
+    $stmtSettings = $db->query("SELECT invoice_prefix, invoice_number_format, invoice_next_number FROM company_settings LIMIT 1");
+    $settings = $stmtSettings->fetch();
+    
+    $prefix = $settings['invoice_prefix'] ?? 'INV';
+    $nextNum = $settings['invoice_next_number'] ?? 1;
+    $format = $settings['invoice_number_format'] ?? '{PREFIX}-{YEAR}-{NUMBER}';
+    $year = date('Y');
+    
+    // Format: replace placeholders
+    $invoiceNumber = str_replace('{PREFIX}', $prefix, $format);
+    $invoiceNumber = str_replace('{YEAR}', $year, $invoiceNumber);
+    $invoiceNumber = str_replace('{NUMBER}', str_pad($nextNum, 4, '0', STR_PAD_LEFT), $invoiceNumber);
+    
+    // Update next number immediately
+    $db->query("UPDATE company_settings SET invoice_next_number = invoice_next_number + 1");
 
     // Capture status from form button (draft or sent)
     $status = $_POST['status'] ?? 'draft';
 
     // 3. Insert Invoice
-    // Note: Totals will be updated by triggers, but we set initial values
+    // We set initial totals to 0, will update after processing items
     $stmt = $db->prepare("INSERT INTO invoices (
         invoice_number, customer_id, customer_name, customer_company, customer_address, 
-        invoice_date, due_date, notes, terms, status, tax_rate
+        invoice_date, due_date, notes, terms, status, tax_rate, subtotal, tax_amount, total
     ) VALUES (
         ?, ?, ?, ?, ?, 
-        ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, 0
+        ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, 0, 0, 0, 0
     )");
     
     $stmt->execute([
@@ -62,7 +74,9 @@ try {
     
     $invoiceId = $db->lastInsertId();
 
-    // 4. Insert Items
+    // 4. Insert Items and Calculate Totals
+    $grandSubtotal = 0;
+    
     if (isset($_POST['items']) && is_array($_POST['items'])) {
         $stmtItem = $db->prepare("INSERT INTO invoice_items (
             invoice_id, product_id, product_name, description, quantity, unit_price, subtotal
@@ -77,25 +91,21 @@ try {
             }
 
             $productId = !empty($item['product_id']) ? $item['product_id'] : null;
-            $quantity = $item['quantity'];
-            $price = $item['price'];
+            $quantity = floatval($item['quantity']);
+            $price = floatval($item['price']);
             $subtotal = $quantity * $price;
+            
+            // Add to running total
+            $grandSubtotal += $subtotal;
             
             // Get product name if product_id exists
             $productName = '';
             if ($productId) {
-                // If using dropdown (create.php sets product_id)
-                // We could fetch name, but for now we rely on what we have.
-                // Actually user might submit product_id but NOT name.
-                // Let's fetch name if needed, or assume manual entry?
-                // The current Create.php sends product_id.
-                // Let's fetch product name to be safe/complete.
                 $pStmt = $db->prepare("SELECT name FROM products WHERE id = ?");
                 $pStmt->execute([$productId]);
                 $prod = $pStmt->fetch();
                 $productName = $prod ? $prod['name'] : 'Unknown Product';
             } else {
-                // Should not happen with new dropdown, but for safety
                 $productName = $item['description'] ?? 'Item'; 
             }
             
@@ -107,6 +117,19 @@ try {
             ]);
         }
     }
+    
+    // 5. Update Invoice Totals (Manual Calculation because we removed Triggers)
+    // Get Tax Rate (could be from settings or input, assuming 0 or default for now)
+    // Ideally we fetch default tax rate from settings again or use a hardcoded value/input
+    // Let's rely on what was inserted or default.
+    // For simplicity, let's re-fetch default tax rate or just use 0 if not set in UI.
+    // Modify: Add tax update if needed. Assuming 0 for now as per previous logic.
+    $taxRate = 0; // Or fetch from company_settings if you want auto-tax
+    $taxAmount = $grandSubtotal * ($taxRate / 100);
+    $finalTotal = $grandSubtotal + $taxAmount;
+    
+    $updateStmt = $db->prepare("UPDATE invoices SET subtotal = ?, tax_amount = ?, total = ? WHERE id = ?");
+    $updateStmt->execute([$grandSubtotal, $taxAmount, $finalTotal, $invoiceId]);
 
     $db->commit();
     

@@ -131,7 +131,8 @@ function createInvoice($db) {
         
         // Set flash message and redirect
         setFlash('success', 'Invoice berhasil dibuat dengan nomor: ' . $invoiceNumber);
-        header('Location: ../page/invoices/view.php?id=' . $invoiceId);
+        // Changed redirect from view.php to print.php
+        header('Location: ../page/invoices/print.php?id=' . $invoiceId);
         exit;
         
     } catch (PDOException $e) {
@@ -236,7 +237,8 @@ function updateInvoice($db) {
         $db->commit();
         
         setFlash('success', 'Invoice berhasil diupdate');
-        header('Location: ../page/invoices/view.php?id=' . $_POST['id']);
+        // Changed redirect from view.php to print.php
+        header('Location: ../page/invoices/print.php?id=' . $_POST['id']);
         exit;
         
     } catch (PDOException $e) {
@@ -320,7 +322,8 @@ function listInvoices($db) {
     $limit = $_GET['limit'] ?? 50;
     $offset = $_GET['offset'] ?? 0;
     
-    $sql = "SELECT * FROM view_invoice_summary WHERE 1=1";
+    // Changed from view_invoice_summary to invoices table
+    $sql = "SELECT * FROM invoices WHERE 1=1";
     $params = [];
     
     if ($search) {

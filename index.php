@@ -146,7 +146,8 @@ $company = getCompanySettings($db);
             
             <?php
             try {
-                $stmt = $db->query("SELECT * FROM view_invoice_summary ORDER BY invoice_date DESC LIMIT 5");
+                // Changed from view_invoice_summary to invoices table directly
+                $stmt = $db->query("SELECT * FROM invoices ORDER BY invoice_date DESC LIMIT 5");
                 $invoices = $stmt->fetchAll();
                 
                 if (empty($invoices)) {
@@ -179,7 +180,7 @@ $company = getCompanySettings($db);
                         echo '<td class="px-6 py-4 text-sm font-medium text-gray-900">Rp ' . number_format($inv['total'], 0, ',', '.') . '</td>';
                         echo '<td class="px-6 py-4"><span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">' . htmlspecialchars($inv['status']) . '</span></td>';
                         echo '<td class="px-6 py-4">';
-                        echo '<a href="page/invoices/view.php?id=' . $inv['id'] . '" class="text-sm text-blue-600 hover:text-blue-700 font-medium">Lihat</a>';
+                        echo '<a href="page/invoices/print.php?id=' . $inv['id'] . '" class="text-sm text-blue-600 hover:text-blue-700 font-medium">Lihat/Print</a>';
                         echo '</td>';
                         echo '</tr>';
                     }
