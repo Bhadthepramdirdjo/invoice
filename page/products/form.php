@@ -12,7 +12,9 @@ $product = [
     'name' => '',
     'price' => '',
     'stock' => '',
+    'stock' => '',
     'unit' => 'pcs',
+    'items_per_unit' => 1,
     'description' => ''
 ];
 $isEdit = false;
@@ -147,15 +149,28 @@ if (!$isEdit) {
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Format: Panjang X Lebar cm</p>
                         </div>
+                        
+                        <!-- Input Isi per Box (Hanya muncul jika pilih box) -->
+                        <div id="boxContainer" class="mt-3 <?php echo $selectedType == 'box' ? '' : 'hidden'; ?>">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Isi per Box (pcs)</label>
+                            <input type="number" name="items_per_unit" id="itemsPerUnit" value="<?php echo htmlspecialchars($product['items_per_unit'] ?? 1); ?>" min="1"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                            <p class="text-xs text-gray-500 mt-1">Contoh: 1 Box = 24 Pcs</p>
+                        </div>
                     </div>
 
                     <script>
                     function updateUnitLogic() {
                         const selector = document.getElementById('unitSelector');
                         const dimContainer = document.getElementById('dimContainer');
+                        const boxContainer = document.getElementById('boxContainer');
                         const finalUnit = document.getElementById('finalUnit');
                         const dimL = document.getElementById('dimL');
                         const dimW = document.getElementById('dimW');
+                        
+                        // Default hidden
+                        dimContainer.classList.add('hidden');
+                        boxContainer.classList.add('hidden');
                         
                         if (selector.value === 'cm') {
                             // Tampilkan input dimensi
@@ -165,11 +180,14 @@ if (!$isEdit) {
                             const p = dimL.value || 0;
                             const l = dimW.value || 0;
                             finalUnit.value = `${p} X ${l} cm`;
-                        } else {
-                            // Sembunyikan input dimensi
-                            dimContainer.classList.add('hidden');
+                        
+                        } else if (selector.value === 'box') {
+                            // Tampilkan input isi per box
+                            boxContainer.classList.remove('hidden');
+                            finalUnit.value = 'box';
                             
-                            // Isi value sesuai dropdown (pcs/box/ml)
+                        } else {
+                            // Isi value sesuai dropdown (pcs/ml)
                             finalUnit.value = selector.value;
                         }
                     }

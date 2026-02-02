@@ -10,8 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = $_POST['price'];
         $stock = $_POST['stock'] ?: 0;
         $unit = $_POST['unit'];
-        $description = $_POST['description'];
-
+        $items_per_unit = $_POST['items_per_unit'] ?: 1; // Default 1
         $description = $_POST['description'];
         
         // Handle File Upload
@@ -44,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($id) {
             // Update logic
-            $query = "UPDATE products SET code = ?, name = ?, price = ?, stock = ?, unit = ?, description = ?";
-            $params = [$code, $name, $price, $stock, $unit, $description];
+            $query = "UPDATE products SET code = ?, name = ?, price = ?, stock = ?, unit = ?, items_per_unit = ?, description = ?";
+            $params = [$code, $name, $price, $stock, $unit, $items_per_unit, $description];
             
             if ($imageName) {
                 $query .= ", image = ?";
@@ -60,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         } else {
             // Insert logic
-            $stmt = $db->prepare("INSERT INTO products (code, name, price, stock, unit, description, image, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
-            $stmt->execute([$code, $name, $price, $stock, $unit, $description, $imageName]);
+            $stmt = $db->prepare("INSERT INTO products (code, name, price, stock, unit, items_per_unit, description, image, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)");
+            $stmt->execute([$code, $name, $price, $stock, $unit, $items_per_unit, $description, $imageName]);
         }
 
         header("Location: list.php?status=success");

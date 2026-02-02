@@ -46,24 +46,18 @@ $products = $stmt->fetchAll();
     <!-- Navbar -->
     <nav class="glass-header fixed w-full z-10 top-0">
         <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-200">
-                        IA
-                    </div>
-                    <div>
-                        <span class="block font-bold text-gray-800 leading-tight">Invoice App</span>
-                        <span class="text-xs text-gray-500 font-medium">Manage your business</span>
-                    </div>
-                </div>
+            <div class="flex items-center justify-center relative">
+                <!-- Logo Removed -->
+                
                 <div class="hidden md:flex items-center gap-8">
                     <a href="../../index.php" class="text-gray-500 hover:text-blue-600 font-medium transition duration-200">Dashboard</a>
                     <a href="list.php" class="text-blue-600 font-semibold transition duration-200">Produk</a>
                     <a href="../customers/list.php" class="text-gray-500 hover:text-blue-600 font-medium transition duration-200">Customer</a>
                     <a href="../invoices/list.php" class="text-gray-500 hover:text-blue-600 font-medium transition duration-200">Invoice</a>
                 </div>
+
                 <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center">
+                <div class="md:hidden flex items-center absolute right-0">
                     <button id="mobile-menu-btn" class="text-gray-500 hover:text-blue-600 focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
@@ -158,11 +152,21 @@ $products = $stmt->fetchAll();
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <?php 
                                         $unit = $product['unit'] ?? 'pcs';
-                                        // Style badge untuk satuan standar, text biasa untuk custom (panjang)
-                                        if (strlen($unit) > 5) {
-                                            echo '<span class="text-sm text-gray-700 font-medium bg-gray-100 px-2 py-1 rounded">'.htmlspecialchars($unit).'</span>';
-                                        } else {
+                                        
+                                        // Tampilan Khusus untuk BOX yang ada isinya
+                                        if (strtolower($unit) === 'box' && !empty($product['items_per_unit']) && $product['items_per_unit'] > 1) {
+                                            echo '<div class="flex flex-col">';
+                                            echo '<span class="px-2.5 py-1 w-max inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-100 uppercase">BOX</span>';
+                                            echo '<span class="text-xs text-gray-500 mt-1 font-medium">Isi: ' . $product['items_per_unit'] . ' pcs</span>';
+                                            echo '</div>';
+                                        } 
+                                        // Style badge standart untuk satuan pendek lainnya
+                                        elseif (strlen($unit) <= 5) {
                                             echo '<span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-100 uppercase">' . htmlspecialchars($unit) . '</span>';
+                                        } 
+                                        // Text biasa untuk custom (panjang)
+                                        else {
+                                            echo '<span class="text-sm text-gray-700 font-medium bg-gray-100 px-2 py-1 rounded">'.htmlspecialchars($unit).'</span>';
                                         }
                                     ?>
                                 </td>
