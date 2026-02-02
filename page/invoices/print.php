@@ -224,15 +224,48 @@ $fromAddress = "Jl. Batukali No.33 Bojong Raya";
     </div>
     
     <!-- Action Buttons -->
+    <!-- html2pdf Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Action Buttons -->
     <div class="fab-container no-print">
         <a href="list.php" class="btn btn-gray">
             ← Kembali
         </a>
-        <button onclick="window.print()" class="btn btn-green">
+        <button id="download-btn" class="btn btn-green">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             Download PDF
         </button>
     </div>
+
+    <script>
+        document.getElementById('download-btn').addEventListener('click', function() {
+            // Get the element to print
+            const element = document.querySelector('.page');
+            
+            // Options for PDF generation
+            const opt = {
+                margin:       0, // 0 margin because .page already has padding
+                filename:     'Invoice-<?php echo $invoice['invoice_number']; ?>.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Change button text to indicate processing
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generating...';
+            btn.disabled = true;
+
+            // Generate and download
+            html2pdf().set(opt).from(element).save().then(function() {
+                // Restore button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+    </script>
 
 </body>
 </html>
