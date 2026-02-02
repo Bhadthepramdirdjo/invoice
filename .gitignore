@@ -1,0 +1,26 @@
+# TailwindCSS Build Files
+tailwindcss.exe
+tailwindcss-windows-x64.exe
+node_modules/
+
+# Development Files (tidak perlu di-upload ke hosting)
+input.css
+tailwind.config.js
+build.ps1
+watch.ps1
+TAILWIND_SETUP.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
