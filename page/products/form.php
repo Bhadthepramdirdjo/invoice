@@ -67,13 +67,13 @@ if (!$isEdit) {
     </nav>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 py-12">
+    <main class="container mx-auto px-4 py-6 md:py-12"> <!-- Reduced padding for mobile -->
         <div class="max-w-2xl mx-auto">
             
-            <form action="save_product.php" method="POST" enctype="multipart/form-data" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <form action="save_product.php" method="POST" enctype="multipart/form-data" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-8"> <!-- Reduced padding for mobile -->
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($id ?? ''); ?>">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                     <!-- Kode Produk -->
                     <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Kode Produk</label>
@@ -203,31 +203,36 @@ if (!$isEdit) {
                     <!-- Image Upload -->
                     <div class="col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Gambar Produk</label>
+                        
+                        <!-- Paste Area -->
+                        <div id="pasteArea" class="mb-3 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition relative group">
+                            <p class="text-sm text-gray-500 pointer-events-none group-hover:text-blue-600">
+                                <span class="hidden md:inline">Klik di sini & </span>Tekan <span class="font-bold border border-gray-300 rounded px-1 text-xs mx-1">Ctrl+V</span> untuk paste gambar
+                                <br>atau Klik untuk pilih file
+                            </p>
+                            <!-- Invisible overlay file input for click -->
+                            <input type="file" name="image" id="imageInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        </div>
+
                         <div class="flex items-center gap-4">
-                            <div id="imagePreview" class="w-24 h-24 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                            <div id="imagePreview" class="w-24 h-24 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                                 <?php if (!empty($product['image'])): ?>
                                     <img src="../../uploads/products/<?php echo htmlspecialchars($product['image']); ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
                                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <?php endif; ?>
                             </div>
-                            <div class="flex-1">
-                                <input type="file" name="image" id="imageInput" accept="image/*"
-                                       class="block w-full text-sm text-slate-500
-                                       file:mr-4 file:py-2 file:px-4
-                                       file:rounded-full file:border-0
-                                       file:text-sm file:font-semibold
-                                       file:bg-blue-50 file:text-blue-700
-                                       file:cursor-pointer hover:file:bg-blue-100 mb-2">
-                                <p class="text-xs text-gray-500">Format: JPG, PNG, GIF. Max: 2MB.</p>
+                            <div class="flex-1 min-w-0">
+                                <p id="fileName" class="text-sm font-medium text-gray-700 truncate">Belum ada file dipilih</p>
+                                <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, GIF. Max: 2MB.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-4 pt-4 border-t border-gray-100">
-                    <a href="list.php" class="px-6 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 shadow-md transition transform hover:-translate-y-0.5">Batal</a>
-                    <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition transform hover:-translate-y-0.5">
+                <div class="flex flex-col-reverse md:flex-row justify-end gap-3 md:gap-4 pt-4 border-t border-gray-100">
+                    <a href="list.php" class="w-full md:w-auto px-6 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 shadow-md transition text-center">Batal</a>
+                    <button type="submit" class="w-full md:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
                         Simpan Produk
                     </button>
                 </div>
@@ -238,18 +243,57 @@ if (!$isEdit) {
     </main>
 
     <script>
-        // Image Preview
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').innerHTML = 
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileName = document.getElementById('fileName');
+        const pasteArea = document.getElementById('pasteArea');
+
+        // Handle File Select
+        imageInput.addEventListener('change', function(e) {
+            handleFile(e.target.files[0]);
+        });
+
+        // Handle Paste (Global & Specific Area)
+        // We listen on window for specific focus, or just general paste if intended
+        document.addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    // Setup a new file object
+                    const file = new File([blob], "pasted_image.png", { type: blob.type });
+                    
+                    // Create a data transfer to update the input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    imageInput.files = dataTransfer.files;
+                    
+                    handleFile(file);
+                    e.preventDefault(); // Prevent double paste action
+                    break;
                 }
-                reader.readAsDataURL(file);
             }
         });
+
+        function handleFile(file) {
+            if (file) {
+                // Update text
+                fileName.textContent = file.name;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+                }
+                reader.readAsDataURL(file);
+                
+                // Visual feedback
+                pasteArea.classList.add('border-green-400', 'bg-green-50');
+                setTimeout(() => {
+                    pasteArea.classList.remove('border-green-400', 'bg-green-50');
+                }, 500);
+            }
+        }
     </script>
 </body>
 </html>

@@ -43,9 +43,8 @@ $products = $stmt->fetchAll();
 </head>
 <body class="text-gray-800">
 
-    <!-- Navbar -->
     <nav class="glass-header fixed w-full z-10 top-0">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-4">
             <div class="flex items-center justify-center relative">
                 <!-- Logo Removed -->
                 
@@ -83,7 +82,7 @@ $products = $stmt->fetchAll();
     </script>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 pt-24 pb-12">
+    <main class="container mx-auto px-4 md:px-6 pt-24 pb-12">
         
         <!-- Header Section -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -91,7 +90,7 @@ $products = $stmt->fetchAll();
                 <h1 class="text-2xl font-bold text-gray-900">Kelola Produk</h1>
                 <p class="text-gray-500 mt-1">Daftar semua produk dan layanan Anda.</p>
             </div>
-            <a href="form.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg shadow-blue-200 transition duration-200 flex items-center gap-2 transform hover:-translate-y-0.5">
+            <a href="form.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg shadow-blue-200 transition duration-200 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 w-full md:w-auto">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Tambah Produk
             </a>
@@ -108,7 +107,7 @@ $products = $stmt->fetchAll();
                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out" 
                            placeholder="Cari nama produk atau kode...">
                 </div>
-                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg font-medium transition duration-200">
+                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg font-medium transition duration-200 w-full md:w-auto">
                     Cari
                 </button>
             </form>

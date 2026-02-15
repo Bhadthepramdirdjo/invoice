@@ -12,6 +12,14 @@ $customers = $db->query("SELECT id, name, email, phone, address FROM customers W
 
 // Get products
 $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_active = 1 ORDER BY name")->fetchAll();
+
+// Get packagings
+$packagings = [];
+try {
+    $packagings = $db->query("SELECT * FROM packagings ORDER BY price ASC")->fetchAll();
+} catch (Exception $e) {
+    // Table might not exist yet
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -40,7 +48,7 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
             border-radius: 0.5rem;
         }
         @media (max-width: 640px) {
-            .invoice { padding: 20px; }
+            .invoice { padding: 16px; } /* Reduced padding */
             
             /* Responsive Table for Invoice Items */
             #itemsTable thead { display: none; }
@@ -50,11 +58,11 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
             }
             #itemsTable tr {
                 margin-bottom: 1rem;
-                background: #f9fafb;
+                background: #ffffff;
                 border: 1px solid #e5e7eb;
-                border-radius: 0.5rem;
+                border-radius: 0.75rem; /* Rounded xl */
                 padding: 1rem;
-                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Shadow */
             }
             #itemsTable td {
                 padding: 0.5rem 0;
@@ -64,17 +72,33 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
             }
             #itemsTable td::before {
                 content: attr(data-label);
-                font-weight: 600;
+                font-weight: 700;
                 display: block;
                 font-size: 0.75rem;
-                color: #6b7280;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #4b5563;
                 margin-bottom: 0.25rem;
             }
-            #itemsTable td:last-child {
-                border-top: 1px solid #e5e7eb;
+            /* Amount specific */
+            #itemsTable td[data-label="Amount"] {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px dashed #e5e7eb;
                 margin-top: 0.5rem;
                 padding-top: 0.75rem;
-                text-align: right !important;
+            }
+            #itemsTable td[data-label="Amount"]::before {
+                margin-bottom: 0;
+            }
+            
+            /* Delete button container */
+            #itemsTable td:last-child {
+                border-top: none;
+                margin-top: 0;
+                padding-top: 0.25rem;
+                text-align: center !important;
             }
             #itemsTable td:last-child::before {
                 display: none;
@@ -156,7 +180,7 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
     </script>
     
     <!-- Main Content -->
-    <div class="container mx-auto px-6 pt-24 pb-12">
+    <div class="container mx-auto px-4 md:px-6 pt-24 pb-12">
         <div class="max-w-5xl mx-auto">
             
             <div class="invoice">
@@ -243,9 +267,44 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
                             </tfoot>
                         </table>
                         
-                        <div class="grid grid-cols-12 gap-2 mt-6 border-t pt-4">
-                            <div class="col-span-6 md:col-span-10 font-bold text-right text-lg text-gray-800">Total</div>
-                            <div class="col-span-6 md:col-span-2 text-right font-bold text-lg text-blue-600" id="summaryTotal">Rp 0</div>
+                        <div class="border-t border-gray-200 mt-6 pt-6 space-y-4">
+                            <!-- Helper for subtotal (items only) -->
+                            <div class="grid grid-cols-12 gap-4 text-sm items-center">
+                                <div class="col-span-6 md:col-span-9 text-right text-gray-500 font-medium">Subtotal</div>
+                                <div class="col-span-6 md:col-span-3 text-right font-bold text-gray-800 text-base" id="displaySubtotal">Rp 0</div>
+                            </div>
+                            
+                            <!-- Packaging (Manual) -->
+                            <div class="grid grid-cols-12 gap-4 items-center transition-all duration-200">
+                                <div class="col-span-6 md:col-span-9 flex items-center justify-end gap-3 text-right">
+                                    <label for="packagingToggle" class="cursor-pointer text-sm font-medium text-gray-700 select-none hover:text-blue-600 transition-colors">Biaya Pengemasan</label>
+                                    <input type="checkbox" id="packagingToggle" class="accent-blue-600 h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-blue-500" onchange="togglePackaging()">
+                                </div>
+                                <div class="col-span-6 md:col-span-3">
+                                    <input type="number" name="packaging_fee" id="packaging_fee" value="0" min="0" 
+                                           class="w-full text-right py-1.5 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200 transition-all shadow-sm" 
+                                           disabled oninput="calculateTotal()" placeholder="0">
+                                </div>
+                            </div>
+                            
+                            <!-- Shipping -->
+                            <div class="grid grid-cols-12 gap-4 items-center transition-all duration-200">
+                                <div class="col-span-6 md:col-span-9 flex items-center justify-end gap-3 text-right">
+                                    <label for="shippingToggle" class="cursor-pointer text-sm font-medium text-gray-700 select-none hover:text-blue-600 transition-colors">Biaya Ongkir</label>
+                                    <input type="checkbox" id="shippingToggle" class="accent-blue-600 h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-blue-500" onchange="toggleShipping()">
+                                </div>
+                                <div class="col-span-6 md:col-span-3">
+                                    <input type="number" name="shipping_fee" id="shipping_fee" value="0" min="0" 
+                                           class="w-full text-right py-1.5 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200 transition-all shadow-sm" 
+                                           disabled oninput="calculateTotal()" placeholder="0">
+                                </div>
+                            </div>
+
+                            <!-- Grand Total -->
+                            <div class="grid grid-cols-12 gap-4 pt-4 border-t border-gray-100 items-center mt-2">
+                                <div class="col-span-6 md:col-span-9 text-right text-base font-bold text-gray-700">Total Akhir</div>
+                                <div class="col-span-6 md:col-span-3 text-right text-xl font-extrabold text-blue-600" id="summaryTotal">Rp 0</div>
+                            </div>
                         </div>
                         
                     </div>
@@ -386,9 +445,41 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
             }
         }
         
-        function calculateTotal() {
-            let total = 0;
+        
+        function togglePackaging() {
+            const toggle = document.getElementById('packagingToggle');
+            const input = document.getElementById('packaging_fee');
             
+            input.disabled = !toggle.checked;
+            if (!toggle.checked) {
+                input.value = 0;
+            } else {
+                input.focus();
+            }
+            calculateTotal();
+        }
+
+        function toggleShipping() {
+            const toggle = document.getElementById('shippingToggle');
+            const input = document.getElementById('shipping_fee');
+            
+            input.disabled = !toggle.checked;
+            if (!toggle.checked) {
+                input.value = 0;
+            } else {
+                input.focus();
+            }
+            calculateTotal();
+        }
+
+
+        
+
+
+        function calculateTotal() {
+            let subtotal = 0;
+            
+            // 1. Sum Items
             for (let i = 1; i <= itemCounter; i++) {
                 const qtyEl = document.getElementById('qty' + i);
                 const priceEl = document.getElementById('price' + i);
@@ -396,12 +487,33 @@ $products = $db->query("SELECT id, name, price, stock FROM products WHERE is_act
                 if (qtyEl && priceEl) {
                     const qty = parseFloat(qtyEl.value) || 0;
                     const price = parseFloat(priceEl.value) || 0;
-                    total += qty * price;
+                    subtotal += qty * price;
                 }
             }
             
-            document.getElementById('summaryTotal').textContent = formatRupiah(total);
-            document.getElementById('hiddenTotal').value = total.toFixed(2);
+            // 2. Get Packaging Fee
+            const pkgInput = document.getElementById('packaging_fee');
+            let pkgFee = 0;
+            if (pkgInput && !pkgInput.disabled) {
+                pkgFee = parseFloat(pkgInput.value) || 0;
+            }
+
+            // 3. Get Shipping Fee
+            const shipInput = document.getElementById('shipping_fee');
+            let shipFee = 0;
+            if (shipInput && !shipInput.disabled) {
+                shipFee = parseFloat(shipInput.value) || 0;
+            }
+
+            const grandTotal = subtotal + pkgFee + shipFee;
+            
+            // Update UI
+            document.getElementById('displaySubtotal').textContent = formatRupiah(subtotal);
+            document.getElementById('summaryTotal').textContent = formatRupiah(grandTotal);
+            
+            // Update Hidden Inputs
+            document.getElementById('hiddenSubtotal').value = subtotal;
+            document.getElementById('hiddenTotal').value = grandTotal;
         }
         
         function formatRupiah(amount) {

@@ -31,7 +31,7 @@ $company = getCompanySettings($db);
     
     <!-- Navbar -->
     <nav class="glass-header fixed w-full z-10 top-0">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-4">
             <div class="flex items-center justify-center relative">
                 <!-- Logo Removed -->
                 
@@ -69,7 +69,7 @@ $company = getCompanySettings($db);
     </script>
     
     <!-- Main Content -->
-    <main class="container mx-auto px-6 pt-24 pb-6">
+    <main class="container mx-auto px-4 md:px-6 pt-24 pb-6">
         
         <!-- Header -->
         <div class="mb-8">
@@ -200,7 +200,7 @@ $company = getCompanySettings($db);
     
     <!-- Footer -->
     <footer class="border-t border-gray-200 mt-12 py-6">
-        <div class="container mx-auto px-6 text-center text-sm text-gray-600">
+        <div class="container mx-auto px-4 md:px-6 text-center text-sm text-gray-600">
             <p>&copy; 2026 Bhadriko - HomeBakle33. All rights reserved.</p>
         </div>
     </footer>

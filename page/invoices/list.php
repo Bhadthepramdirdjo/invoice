@@ -87,7 +87,7 @@ function getStatusColor($status) {
 
     <!-- Navbar -->
     <nav class="glass-header fixed w-full z-10 top-0">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-4">
             <div class="flex items-center justify-center relative">
                 <!-- Logo Removed -->
                 
@@ -125,7 +125,7 @@ function getStatusColor($status) {
     </script>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 pt-24 pb-12">
+    <main class="container mx-auto px-4 md:px-6 pt-24 pb-12">
         
         <!-- Header Section -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -133,7 +133,7 @@ function getStatusColor($status) {
                 <h1 class="text-2xl font-bold text-gray-900">Daftar Invoice</h1>
                 <p class="text-gray-500 mt-1">Kelola semua tagihan dan pembayaran customer.</p>
             </div>
-            <a href="create.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg shadow-blue-200 transition duration-200 flex items-center gap-2 transform hover:-translate-y-0.5">
+            <a href="create.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg shadow-blue-200 transition duration-200 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 w-full md:w-auto">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Buat Invoice Baru
             </a>
@@ -169,7 +169,7 @@ function getStatusColor($status) {
                     </select>
                 </div>
 
-                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg font-medium transition duration-200">
+                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg font-medium transition duration-200 w-full md:w-auto">
                     Filter
                 </button>
             </form>

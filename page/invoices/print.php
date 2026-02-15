@@ -188,6 +188,25 @@ $fromAddress = "Jl. Batukali No.33 Bojong Raya";
         <!-- Summary -->
         <div class="summary">
             <div class="summary-box">
+                <div class="summary-row">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span><?php echo 'Rp ' . number_format($invoice['subtotal'], 0, ',', '.'); ?></span>
+                </div>
+                
+                <?php if (!empty($invoice['packaging_fee']) && $invoice['packaging_fee'] > 0): ?>
+                <div class="summary-row">
+                    <span class="text-gray-600">Biaya Pengemasan</span>
+                    <span><?php echo 'Rp ' . number_format($invoice['packaging_fee'], 0, ',', '.'); ?></span>
+                </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($invoice['shipping_fee']) && $invoice['shipping_fee'] > 0): ?>
+                <div class="summary-row">
+                    <span class="text-gray-600">Ongkos Kirim</span>
+                    <span><?php echo 'Rp ' . number_format($invoice['shipping_fee'], 0, ',', '.'); ?></span>
+                </div>
+                <?php endif; ?>
+
                 <div class="summary-row total">
                     <span>Total</span>
                     <span><?php echo 'Rp ' . number_format($invoice['total'], 0, ',', '.'); ?></span>
@@ -197,13 +216,21 @@ $fromAddress = "Jl. Batukali No.33 Bojong Raya";
         
         <!-- Footer Notes -->
         <div class="notes-section">
-            <div class="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <h4 class="font-bold text-gray-800 mb-2">Rekening Pembayaran:</h4>
-                <div class="flex items-center gap-3">
-                    <span class="font-bold text-blue-800">BCA</span>
-                    <span class="font-mono text-lg font-medium text-gray-800">139 2828 936</span>
+            <div class="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="w-full md:w-auto">
+                    <h4 class="font-bold text-gray-800 mb-2">Rekening Pembayaran:</h4>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-blue-800">BCA</span>
+                        <span class="font-mono text-lg font-medium text-gray-800">139 2828 936</span>
+                    </div>
+                    <div class="text-gray-600 mt-1">a.n. Dian Rosdiana</div>
                 </div>
-                <div class="text-gray-600 mt-1">a.n. Dian Rosdiana</div>
+                <div class="w-full md:w-auto text-center md:text-right">
+                    <div class="inline-block bg-white p-2 rounded border border-gray-200 shadow-sm text-center">
+                        <p class="text-sm font-bold text-gray-700 mb-1">Pembayaran QRIS</p>
+                        <img src="../../img/QrisQROnly.jpeg" alt="QRIS Payment" class="h-40 w-40 object-contain mx-auto">
+                    </div>
+                </div>
             </div>
 
             <?php if (!empty($invoice['notes'])): ?>
@@ -243,9 +270,18 @@ $fromAddress = "Jl. Batukali No.33 Bojong Raya";
             // Get the element to print
             const element = document.querySelector('.page');
             
+            // PERBAIKAN: Hapus constraint tinggi agar tidak memicu halaman kosong baru
+            // Simpan style asli
+            const originalMinHeight = element.style.minHeight;
+            const originalHeight = element.style.height;
+            
+            // Set height auto agar pas dengan konten
+            element.style.minHeight = 'auto';
+            element.style.height = 'auto'; 
+            
             // Options for PDF generation
             const opt = {
-                margin:       0, // 0 margin because .page already has padding
+                margin:       0, 
                 filename:     'Invoice-<?php echo $invoice['invoice_number']; ?>.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
@@ -260,6 +296,10 @@ $fromAddress = "Jl. Batukali No.33 Bojong Raya";
 
             // Generate and download
             html2pdf().set(opt).from(element).save().then(function() {
+                // Restore logic
+                element.style.minHeight = originalMinHeight;
+                element.style.height = originalHeight;
+                
                 // Restore button
                 btn.innerHTML = originalText;
                 btn.disabled = false;

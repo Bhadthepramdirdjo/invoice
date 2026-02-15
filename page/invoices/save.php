@@ -57,19 +57,27 @@ try {
     // Capture status from form button (draft or sent)
     $status = $_POST['status'] ?? 'draft';
 
+    // Get new fields
+    $shippingFee = floatval($_POST['shipping_fee'] ?? 0);
+    $packagingFee = floatval($_POST['packaging_fee'] ?? 0);
+    
     // 3. Insert Invoice
     // We set initial totals to 0, will update after processing items
+    // Added shipping_fee only
     $stmt = $db->prepare("INSERT INTO invoices (
         invoice_number, customer_id, customer_name, customer_company, customer_address, 
-        invoice_date, due_date, notes, terms, status, tax_rate, subtotal, tax_amount, total
+        invoice_date, due_date, notes, terms, status, tax_rate, subtotal, tax_amount, total,
+        shipping_fee, packaging_fee
     ) VALUES (
         ?, ?, ?, ?, ?, 
-        ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, 0, 0, 0, 0
+        ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, 0, 0, 0, 0,
+        ?, ?
     )");
     
     $stmt->execute([
         $invoiceNumber, $customerId, $customerName, $customerCompany, $customerAddress,
-        $invoiceDate, $invoiceDate, $notes, $terms, $status
+        $invoiceDate, $invoiceDate, $notes, $terms, $status,
+        $shippingFee, $packagingFee
     ]);
     
     $invoiceId = $db->lastInsertId();
@@ -101,12 +109,14 @@ try {
             // Get product name if product_id exists
             $productName = '';
             if ($productId) {
+                // Fetch name separately or pass from form hidden? 
+                // Form doesn't pass name, only ID.
                 $pStmt = $db->prepare("SELECT name FROM products WHERE id = ?");
                 $pStmt->execute([$productId]);
-                $prod = $pStmt->fetch();
-                $productName = $prod ? $prod['name'] : 'Unknown Product';
+                $prod = $pStmt->fetch(); // Corrected variable name
+                $productName = $prod ? $prod['name'] : 'Item';
             } else {
-                $productName = $item['description'] ?? 'Item'; 
+                $productName = 'Item'; 
             }
             
             // Description is implicitly the product name or we can leave it empty
@@ -119,14 +129,11 @@ try {
     }
     
     // 5. Update Invoice Totals (Manual Calculation because we removed Triggers)
-    // Get Tax Rate (could be from settings or input, assuming 0 or default for now)
-    // Ideally we fetch default tax rate from settings again or use a hardcoded value/input
-    // Let's rely on what was inserted or default.
-    // For simplicity, let's re-fetch default tax rate or just use 0 if not set in UI.
-    // Modify: Add tax update if needed. Assuming 0 for now as per previous logic.
-    $taxRate = 0; // Or fetch from company_settings if you want auto-tax
+    $taxRate = 0; 
     $taxAmount = $grandSubtotal * ($taxRate / 100);
-    $finalTotal = $grandSubtotal + $taxAmount;
+    
+    // Grand Total = Items + Tax + Packaging + Shipping
+    $finalTotal = $grandSubtotal + $taxAmount + $packagingFee + $shippingFee;
     
     $updateStmt = $db->prepare("UPDATE invoices SET subtotal = ?, tax_amount = ?, total = ? WHERE id = ?");
     $updateStmt->execute([$grandSubtotal, $taxAmount, $finalTotal, $invoiceId]);
